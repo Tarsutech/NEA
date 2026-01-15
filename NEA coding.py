@@ -1,7 +1,8 @@
 import cv2
 import mediapipe as mp
 import time
-# stage 1
+import pyttsx3
+# STAGE 1
 # INITIALISE MEDIAPIPE
 
 mp_hands = mp.solutions.hands
@@ -15,19 +16,24 @@ hands = mp_hands.Hands(
 mp_draw = mp.solutions.drawing_utils
 
 
-# OPEN CAMERA (WINDOWS SAFE)
+# OPEN CAMERA 
 
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
 if not cap.isOpened():
     print(" Camera not opening")
     exit()
-#stage 5 variables
+#STAGE 5 VARIABLES
 output_text=""
 last_letter=""
 last_time = time.time()
-delay=1.0 
-#stage 2
+delay=1.0
+#INITIALISE TEXT TO SPEECH
+engine=pyttsx3.init()
+engine.setProperty('rate',150)
+
+
+#STAGE 2
 
 # MAIN LOOP
 
@@ -46,7 +52,7 @@ while True:
     if results.multi_hand_landmarks:
         for hand_landmarks in results.multi_hand_landmarks:
 
-            # Draw hand landmarks
+            # DRAW HAND LANDMARKS
             mp_draw.draw_landmarks(
                 frame,
                 hand_landmarks,
@@ -90,7 +96,7 @@ while True:
                 letter="D"
             else:
                 letter="Unknown"
-            #stage 5
+            #STAGE 5
             current_time= time.time()
             if letter != "None":
                 if letter == last_letter and current_time- last_time >= delay:
@@ -123,10 +129,35 @@ while True:
                 2
             )
 
-    cv2.imshow("SignSpeak - Finger Detection", frame)
+            cv2.putText(
+                frame,
+                "Press C to speak | R to reset | Q to quit",
+                    (10, 120),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.7,
+                (0, 255, 0),
+                2)
+            
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
 
+            cv2.imshow("SignSpeak- Stage 6 (Text to speech)",frame)
+            Key=cv2.waitkey(1) & 0xFF
+
+            #CONTROLS
+
+           
+            if Key == ord('q'):
+                break
+            if Key == ord('r'):
+                output_text=""
+                last_letter=""
+            if Key == ord('c') and output_text != "":
+                engine.say(output_text)
+                engine.runAndWait()
+
+
+
+
+        
 cap.release()
 cv2.destroyAllWindows()
