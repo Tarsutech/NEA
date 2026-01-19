@@ -2,13 +2,15 @@ import cv2
 import mediapipe as mp
 import time
 import pyttsx3
-# STAGE 1
-# INITIALISE MEDIAPIPE
+
+
+# STAGE 1: INITIALISE MEDIAPIPE
+
 
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(
     static_image_mode=False,
-    max_num_hands=1,
+    max_num_hands=2,
     min_detection_confidence=0.7,
     min_tracking_confidence=0.7
 )
@@ -16,26 +18,34 @@ hands = mp_hands.Hands(
 mp_draw = mp.solutions.drawing_utils
 
 
-# OPEN CAMERA 
+# STAGE 2: OPEN CAMERA
+
 
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
 if not cap.isOpened():
-    print(" Camera not opening")
+    print("Camera not opening")
     exit()
-#STAGE 5 VARIABLES
-output_text=""
-last_letter=""
+
+
+# STAGE 5: VARIABLES
+
+
+output_text = ""
+last_letter = ""
 last_time = time.time()
-delay=1.0
-#INITIALISE TEXT TO SPEECH
-engine=pyttsx3.init()
-engine.setProperty('rate',150)
+delay = 1.0
 
 
-#STAGE 2
+# INITIALISE TEXT TO SPEECH
+
+
+engine = pyttsx3.init()
+engine.setProperty('rate', 150)
+
 
 # MAIN LOOP
+
 
 while True:
     ret, frame = cap.read()
@@ -59,105 +69,27 @@ while True:
                 mp_hands.HAND_CONNECTIONS
             )
 
+          
+            # STAGE 3: FINGER LOGIC PLACEHOLDER
            
-            # STAGE 3 LOGIC: FINGER UP / DOWN
-           
-            landmarks = hand_landmarks.landmark
+            # (You can add finger counting / sign detection here)
+            pass
 
-            fingers = []
+    # DISPLAY WINDOW
+    
 
-            # Thumb (special case: x-axis)
-            if landmarks[4].x > landmarks[3].x:
-                fingers.append(1)
-            else:
-                fingers.append(0)
+    cv2.imshow("Hand Tracking", frame)
 
-            # Index finger
-            fingers.append(1 if landmarks[8].y < landmarks[6].y else 0)
+  
+    # EXIT ON Q
+   
 
-            # Middle finger
-            fingers.append(1 if landmarks[12].y < landmarks[10].y else 0)
-
-            # Ring finger
-            fingers.append(1 if landmarks[16].y < landmarks[14].y else 0)
-
-            # Little finger
-            fingers.append(1 if landmarks[20].y < landmarks[18].y else 0)
-            #stage 4
-            if fingers==[0,0,0,0,0]:
-                letter="A"
-            elif fingers==[0,1,1,1,1]:
-                letter="B"
-            elif fingers == [1,1,0,0,0]:
-                letter="L"
-            elif fingers ==[0,1,1,0,0]:
-                letter="U"
-            elif fingers ==[0,1,0,0,0]:
-                letter="D"
-            else:
-                letter="Unknown"
-            #STAGE 5
-            current_time= time.time()
-            if letter != "None":
-                if letter == last_letter and current_time- last_time >= delay:
-                    output_text += letter
-                    last_time = current_time
-            elif letter != last_letter:
-                last_letter = letter
-                last_time = current_time
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
 
-            # Display finger states
-            cv2.putText(
-                frame,
-                f"Fingers: {fingers}",
-                (10, 40),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (0, 255, 0),
-                2
-            )
-
-            # Display finger count
-            cv2.putText(
-                frame,
-                f"Up Count: {fingers.count(1)}",
-                (10, 80),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (255, 255, 255),
-                2
-            )
-
-            cv2.putText(
-                frame,
-                "Press C to speak | R to reset | Q to quit",
-                    (10, 120),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.7,
-                (0, 255, 0),
-                2)
-            
+# CLEAN UP
 
 
-            cv2.imshow("SignSpeak- Stage 6 (Text to speech)",frame)
-            Key=cv2.waitkey(1) & 0xFF
-
-            #CONTROLS
-
-           
-            if Key == ord('q'):
-                break
-            if Key == ord('r'):
-                output_text=""
-                last_letter=""
-            if Key == ord('c') and output_text != "":
-                engine.say(output_text)
-                engine.runAndWait()
-
-
-
-
-        
 cap.release()
 cv2.destroyAllWindows()
